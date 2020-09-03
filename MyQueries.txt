@@ -1,0 +1,21 @@
+====Queries====
+**Queries for reconcilePayments()
+ALTER TABLE orders ADD paymentStatus varchar(255);
+
+ALTER TABLE orders ADD amount float;
+
+ALTER TABLE orders ADD checkNumber varchar(255);
+
+UPDATE orders o join payments p on p.customerNumber=o.customerNumber set o.checkNumber = p.checkNumber;
+
+UPDATE orders o join (select sum(orderdetails.quantityOrdered*orderdetails.priceEach) as sales, orderNumber from orderdetails group by orderNumber) result on  o.orderNumber = result.orderNumber set o.amount = result.sales;
+
+UPDATE orders o join payments p set o.paymentStatus = 'YES' where (o.amount) = (p.amount) and o.checkNumber = p.checkNumber and o.paymentStatus is null;
+
+
+** Queries for unknownPayments()
+SELECT checkNumber FROM payments except select checkNumber from orders
+
+
+**Queries for unpaidOrders()
+select orderNumber from orders where paymentStatus is not null and status not like 'Cancelled' and status not like 'Disputed';
